@@ -1,4 +1,4 @@
-package a04.wallet;
+package id.ac.ui.cs.a04.json.wallet;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -4,7 +4,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 }
 
-group = "a04"
+group = "id.ac.ui.cs.a04.json"
 version = "0.0.1-SNAPSHOT"
 description = "wallet"
 
