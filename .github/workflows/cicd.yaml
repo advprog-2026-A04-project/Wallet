@@ -2,7 +2,23 @@ name: CI/CD
 on: push
 jobs:
   hello:
+    name: Print 'Hello'
     runs-on: ubuntu-latest
     steps:
       - name: Print 'Hello'
         run: echo "Hello"
+  build:
+    name: Build the app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: Build with Gradle
+        run: ./gradlew assemble
