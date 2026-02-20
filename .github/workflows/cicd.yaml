@@ -20,5 +20,5 @@ jobs:
           java-version: 21
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
-      - name: Build with Gradle
-        run: ./gradlew assemble
+      - name: Build and test
+        run: ./gradlew build
