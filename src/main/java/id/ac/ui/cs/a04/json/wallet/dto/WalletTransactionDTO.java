@@ -1,9 +1,9 @@
-package id.ac.ui.cs.a04.json.wallet.model;
+package id.ac.ui.cs.a04.json.wallet.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-
+import id.ac.ui.cs.a04.json.wallet.model.TransactionDirection;
+import id.ac.ui.cs.a04.json.wallet.model.TransactionReferenceType;
+import id.ac.ui.cs.a04.json.wallet.model.TransactionStatus;
+import id.ac.ui.cs.a04.json.wallet.model.TransactionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,14 +15,10 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
-@Entity
-public class WalletTransaction {
-
-    @Id
-    @GeneratedValue
+@NoArgsConstructor
+@AllArgsConstructor
+public class WalletTransactionDTO {
     private Long id;
     private Long userId;
     private TransactionType type;
@@ -32,5 +28,4 @@ public class WalletTransaction {
     private TransactionReferenceType refType;
     private Long refId;
     private LocalDateTime createdAt;
-
 }

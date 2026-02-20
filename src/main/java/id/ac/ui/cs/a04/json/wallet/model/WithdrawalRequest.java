@@ -1,5 +1,6 @@
 package id.ac.ui.cs.a04.json.wallet.model;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
 public class WithdrawalRequest {
     @Id
     @GeneratedValue

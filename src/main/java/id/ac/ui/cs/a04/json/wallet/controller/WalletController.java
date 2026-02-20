@@ -23,36 +23,24 @@ import java.util.List;
 @RequestMapping("/wallet")
 public class WalletController {
 
-    private WalletService service;
+    private WalletService walletService;
 
     @Autowired
     public WalletController(WalletService walletService) {
-        this.service = walletService;
+        this.walletService = walletService;
     }
 
     @GetMapping("/balance")
-    public ResponseEntity<BigDecimal> getBalance() {
-        // TODO: Functionality
+    public ResponseEntity<BigDecimal> getBalance(@RequestBody Long userId) {
         // TODO: Authentication
-        return ResponseEntity.ok(new BigDecimal("200.0"));
+        BigDecimal balance = walletService.getWalletByUserId(userId).getBalance();
+        return ResponseEntity.ok(balance);
     }
 
     @GetMapping("/transactions")
     public ResponseEntity<List<WalletTransaction>> getTransactions() {
-        // TODO: Functionality
         // TODO: Authentication
-        List<WalletTransaction> list = new ArrayList<>();
-        WalletTransaction transaction = WalletTransaction.builder()
-                .userId((long) 0)
-                .type(TransactionType.TOPUP)
-                .direction(TransactionDirection.DEBIT)
-                .amount(new BigDecimal("100.0"))
-                .status(TransactionStatus.SUCCESS)
-                .refType(TransactionReferenceType.TOPUP_REQUEST)
-                .refId((long) 0)
-                .createdAt(LocalDateTime.now())
-                .build();
-        list.add(transaction);
+        List<WalletTransaction> list = walletService.getAllTransactions();
         return ResponseEntity.ok(list);
     }
 
@@ -99,17 +87,17 @@ public class WalletController {
     }
 
     @PostMapping("/deduct")
-    public ResponseEntity<Boolean> deduct(@RequestBody Long userId, @RequestBody BigDecimal amount, @RequestBody Long orderId) {
-        // TODO: Functionality
+    public ResponseEntity<BigDecimal> deduct(@RequestBody Long userId, @RequestBody BigDecimal amount, @RequestBody Long orderId) {
         // TODO: Authentication
-        return ResponseEntity.ok(true);
+        BigDecimal newBalance = walletService.deduct(userId, orderId, amount);
+        return ResponseEntity.ok(newBalance);
     }
 
     @PostMapping("/refund")
-    public ResponseEntity<Boolean> refund(@RequestBody Long userId, @RequestBody BigDecimal amount, @RequestBody Long orderId) {
-        // TODO: Functionality
+    public ResponseEntity<BigDecimal> refund(@RequestBody Long userId, @RequestBody BigDecimal amount, @RequestBody Long orderId) {
         // TODO: Authentication
-        return ResponseEntity.ok(true);
+        BigDecimal newBalance = walletService.refund(userId, orderId, amount);
+        return ResponseEntity.ok(newBalance);
     }
 
 }
