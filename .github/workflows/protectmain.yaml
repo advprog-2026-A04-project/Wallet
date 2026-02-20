@@ -4,12 +4,10 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
 
 jobs:
   check-source-branch:
+    name: Check source branch
     runs-on: ubuntu-latest
     steps:
       - name: Ensure PR is from staging
