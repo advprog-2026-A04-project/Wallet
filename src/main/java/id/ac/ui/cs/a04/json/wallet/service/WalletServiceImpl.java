@@ -72,4 +72,10 @@ public class WalletServiceImpl implements WalletService {
                 .build());
         return newBalance;
     }
+
+    @Override
+    public Long createTopUpRequest(Long userId, BigDecimal amount) {
+        // TODO: Functionality
+        return 0L;
+    }
 }

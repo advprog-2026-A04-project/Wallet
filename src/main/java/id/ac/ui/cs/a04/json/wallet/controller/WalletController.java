@@ -45,10 +45,10 @@ public class WalletController {
     }
 
     @PostMapping("/topup")
-    public ResponseEntity<Boolean> topUp(@RequestBody BigDecimal amount)  {
-        // TODO: Functionality
+    public ResponseEntity<Long> topUp(@RequestBody Long userId, @RequestBody BigDecimal amount)  {
         // TODO: Authentication
-        return ResponseEntity.ok(true);
+        Long topUpId = walletService.createTopUpRequest(userId, amount);
+        return ResponseEntity.ok(topUpId);
     }
 
     @PostMapping("/topup/{id}/mark-success")
