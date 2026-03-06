@@ -78,4 +78,16 @@ public class WalletServiceImpl implements WalletService {
         // TODO: Functionality
         return 0L;
     }
+
+    @Override
+    public boolean markTopUpSuccess(Long topUpId) {
+        // TODO: Functionality
+        return true;
+    }
+
+    @Override
+    public boolean markTopUpFailed(Long topUpId) {
+        // TODO: Functionality
+        return true;
+    }
 }
