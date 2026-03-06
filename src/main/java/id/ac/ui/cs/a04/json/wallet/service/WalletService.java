@@ -11,4 +11,7 @@ public interface WalletService {
     public List<WalletTransaction> getAllTransactions();
     public BigDecimal deduct(Long userId, Long orderId, BigDecimal amount);
     public BigDecimal refund(Long userId, Long orderId, BigDecimal amount);
+    Long createTopUpRequest(Long userId, BigDecimal amount);
+    boolean markTopUpSuccess(Long topUpId);
+    boolean markTopUpFailed(Long topUpId);
 }
