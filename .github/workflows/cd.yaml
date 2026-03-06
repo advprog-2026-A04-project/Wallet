@@ -1,4 +1,4 @@
-name: Deploy (dummy)
+name: Deploy
 
 on:
   workflow_run:
@@ -29,6 +29,6 @@ jobs:
       - name: Deploy
         uses: koyeb/action-git-deploy@v1
         with:
-          service-env: PORT=8000
+          service-env: PORT=8080
           service-ports: "8080:http"
           service-routes: "/:8080"
