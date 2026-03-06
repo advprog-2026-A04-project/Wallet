@@ -9,6 +9,7 @@ import id.ac.ui.cs.a04.json.wallet.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,24 +46,24 @@ public class WalletController {
     }
 
     @PostMapping("/topup")
-    public ResponseEntity<Boolean> topUp(@RequestBody BigDecimal amount)  {
-        // TODO: Functionality
+    public ResponseEntity<Long> topUp(@RequestBody Long userId, @RequestBody BigDecimal amount)  {
         // TODO: Authentication
-        return ResponseEntity.ok(true);
+        Long topUpId = walletService.createTopUpRequest(userId, amount);
+        return ResponseEntity.ok(topUpId);
     }
 
     @PostMapping("/topup/{id}/mark-success")
-    public ResponseEntity<Boolean> topUpMarkSuccess() {
-        // TODO: Functionality
+    public ResponseEntity<Boolean> topUpMarkSuccess(@PathVariable Long id) {
         // TODO: Authentication
-        return ResponseEntity.ok(true);
+        boolean result = walletService.markTopUpSuccess(id);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/topup/{id}/mark-failed")
-    public ResponseEntity<Boolean> topUpMarkFailed() {
-        // TODO: Functionality
+    public ResponseEntity<Boolean> topUpMarkFailed(@PathVariable Long id) {
         // TODO: Authentication
-        return ResponseEntity.ok(true);
+        boolean result = walletService.markTopUpFailed(id);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/withdraw")
