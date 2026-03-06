@@ -1,7 +1,22 @@
 FROM docker.io/library/eclipse-temurin:21-jdk-alpine AS builder
 
+# install Node for React
+RUN apk add --no-cache nodejs npm
+
 WORKDIR /src/wallet
 COPY . .
+
+# build React
+WORKDIR /src/wallet/frontend
+RUN npm install
+RUN npm run build
+
+# copy React build into Spring Boot static resources
+RUN mkdir -p /src/wallet/src/main/resources/static
+RUN cp -r dist/* /src/wallet/src/main/resources/static/
+
+# build Spring Boot jar
+WORKDIR /src/wallet
 RUN chmod +x gradlew
 RUN ./gradlew clean bootJar
 
