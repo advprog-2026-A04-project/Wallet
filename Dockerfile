@@ -12,8 +12,8 @@ RUN npm install
 RUN npm run build
 
 # copy React build into Spring Boot static resources
-RUN mkdir -p /src/wallet/src/main/resources/static
-RUN cp -r dist/* /src/wallet/src/main/resources/static/
+RUN mkdir -p /src/wallet/src/main/resources/static/app
+RUN cp -r dist/* /src/wallet/src/main/resources/static/app/
 
 # build Spring Boot jar
 WORKDIR /src/wallet
