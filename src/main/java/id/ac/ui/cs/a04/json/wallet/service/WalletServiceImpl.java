@@ -1,12 +1,14 @@
 package id.ac.ui.cs.a04.json.wallet.service;
 
 import id.ac.ui.cs.a04.json.wallet.dto.WalletTransactionDTO;
+import id.ac.ui.cs.a04.json.wallet.model.TopUpRequest;
 import id.ac.ui.cs.a04.json.wallet.model.TransactionDirection;
 import id.ac.ui.cs.a04.json.wallet.model.TransactionReferenceType;
 import id.ac.ui.cs.a04.json.wallet.model.TransactionStatus;
 import id.ac.ui.cs.a04.json.wallet.model.TransactionType;
 import id.ac.ui.cs.a04.json.wallet.model.Wallet;
 import id.ac.ui.cs.a04.json.wallet.model.WalletTransaction;
+import id.ac.ui.cs.a04.json.wallet.repository.TopUpRequestRepository;
 import id.ac.ui.cs.a04.json.wallet.repository.WalletRepository;
 import id.ac.ui.cs.a04.json.wallet.repository.WalletTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +22,18 @@ import java.util.List;
 @Service
 public class WalletServiceImpl implements WalletService {
 
+    private final WalletTransactionService walletTransactionService;
     private WalletTransactionService transactionService;
+
     private WalletRepository walletRepository;
+    private TopUpRequestRepository topUpRequestRepository;
 
     @Autowired
-    public WalletServiceImpl(WalletTransactionService transactionService, WalletRepository walletRepository) {
-        this.transactionService = transactionService;
+    public WalletServiceImpl(WalletTransactionService transactionService, WalletRepository walletRepository, TopUpRequestRepository topUpRequestRepository, WalletTransactionService walletTransactionService) {
         this.walletRepository = walletRepository;
+        this.transactionService = transactionService;
+        this.topUpRequestRepository = topUpRequestRepository;
+        this.walletTransactionService = walletTransactionService;
     }
 
     @Override
@@ -75,19 +82,44 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public Long createTopUpRequest(Long userId, BigDecimal amount) {
-        // TODO: Functionality
-        return 0L;
+        TopUpRequest result = topUpRequestRepository.save(TopUpRequest.builder()
+                .userId(userId)
+                .amount(amount)
+                .status(TransactionStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .build());
+        return result.getId();
     }
 
     @Override
     public boolean markTopUpSuccess(Long topUpId) {
-        // TODO: Functionality
+        // TODO: Atomicity
+        TopUpRequest request = topUpRequestRepository.getReferenceById(topUpId);
+        if (request.getStatus() != TransactionStatus.PENDING) {
+            return false;
+        }
+        request.setStatus(TransactionStatus.SUCCESS);
+        topUpRequestRepository.save(request);
+        walletTransactionService.createTransaction(WalletTransactionDTO.builder()
+                .userId(request.getUserId())
+                .type(TransactionType.TOPUP)
+                .direction(TransactionDirection.DEBIT)
+                .amount(request.getAmount())
+                .status(TransactionStatus.SUCCESS)
+                .refType(TransactionReferenceType.TOPUP_REQUEST)
+                .refId(request.getId())
+                .build());
         return true;
     }
 
     @Override
     public boolean markTopUpFailed(Long topUpId) {
-        // TODO: Functionality
+        TopUpRequest request = topUpRequestRepository.getReferenceById(topUpId);
+        if (request.getStatus() != TransactionStatus.PENDING) {
+            return false;
+        }
+        request.setStatus(TransactionStatus.FAILED);
+        topUpRequestRepository.save(request);
         return true;
     }
 
