@@ -23,17 +23,19 @@ import java.util.List;
 
 @Service
 public class WalletServiceImpl implements WalletService {
-
-    private WalletTransactionService transactionService;
-
     private WalletRepository walletRepository;
+    private WalletTransactionRepository transactionRepository;
     private TopUpRequestRepository topUpRequestRepository;
     private WithdrawalRequestRepository withdrawalRequestRepository;
 
     @Autowired
-    public WalletServiceImpl(WalletTransactionService transactionService, WalletRepository walletRepository, TopUpRequestRepository topUpRequestRepository, WithdrawalRequestRepository withdrawalRequestRepository) {
+    public WalletServiceImpl(
+            WalletRepository walletRepository,
+            WalletTransactionRepository transactionRepository,
+            TopUpRequestRepository topUpRequestRepository,
+            WithdrawalRequestRepository withdrawalRequestRepository) {
         this.walletRepository = walletRepository;
-        this.transactionService = transactionService;
+        this.transactionRepository = transactionRepository;
         this.topUpRequestRepository = topUpRequestRepository;
         this.withdrawalRequestRepository = withdrawalRequestRepository;
     }
@@ -45,7 +47,7 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public List<WalletTransaction> getAllTransactions() {
-        return transactionService.getAllTransactions();
+        return transactionRepository.findAll();
     }
 
     @Override
@@ -53,7 +55,7 @@ public class WalletServiceImpl implements WalletService {
         Wallet wallet = getWalletByUserId(userId);
         // TODO: Safely revert mutation if createTransaction fails
         BigDecimal newBalance = wallet.decreaseBalance(amount);
-        transactionService.createTransaction(WalletTransactionDTO.builder()
+        transactionRepository.save(WalletTransaction.builder()
                 .userId(userId)
                 .type(TransactionType.PAYMENT)
                 .direction(TransactionDirection.CREDIT)
@@ -70,7 +72,7 @@ public class WalletServiceImpl implements WalletService {
         Wallet wallet = getWalletByUserId(userId);
         // TODO: Safely revert mutation if createTransaction fails
         BigDecimal newBalance = wallet.increaseBalance(amount);
-        transactionService.createTransaction(WalletTransactionDTO.builder()
+        transactionRepository.save(WalletTransaction.builder()
                 .userId(userId)
                 .type(TransactionType.REFUND)
                 .direction(TransactionDirection.DEBIT)
@@ -102,7 +104,7 @@ public class WalletServiceImpl implements WalletService {
         }
         request.setStatus(TransactionStatus.SUCCESS);
         topUpRequestRepository.save(request);
-        transactionService.createTransaction(WalletTransactionDTO.builder()
+        transactionRepository.save(WalletTransaction.builder()
                 .userId(request.getUserId())
                 .type(TransactionType.TOPUP)
                 .direction(TransactionDirection.DEBIT)
@@ -146,7 +148,7 @@ public class WalletServiceImpl implements WalletService {
         }
         request.setStatus(TransactionStatus.SUCCESS);
         withdrawalRequestRepository.save(request);
-        transactionService.createTransaction(WalletTransactionDTO.builder()
+        transactionRepository.save(WalletTransaction.builder()
                 .userId(request.getUserId())
                 .type(TransactionType.WITHDRAWAL)
                 .direction(TransactionDirection.CREDIT)
