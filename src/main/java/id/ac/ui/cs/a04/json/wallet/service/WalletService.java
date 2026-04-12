@@ -14,4 +14,7 @@ public interface WalletService {
     Long createTopUpRequest(Long userId, BigDecimal amount);
     boolean markTopUpSuccess(Long topUpId);
     boolean markTopUpFailed(Long topUpId);
+    Long createWithdrawRequest(Long userId, BigDecimal amount, String destination);
+    boolean markWithdrawSuccess(Long topUpId);
+    boolean markWithdrawFailed(Long topUpId);
 }
