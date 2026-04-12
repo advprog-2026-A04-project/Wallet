@@ -8,9 +8,11 @@ import id.ac.ui.cs.a04.json.wallet.model.TransactionStatus;
 import id.ac.ui.cs.a04.json.wallet.model.TransactionType;
 import id.ac.ui.cs.a04.json.wallet.model.Wallet;
 import id.ac.ui.cs.a04.json.wallet.model.WalletTransaction;
+import id.ac.ui.cs.a04.json.wallet.model.WithdrawalRequest;
 import id.ac.ui.cs.a04.json.wallet.repository.TopUpRequestRepository;
 import id.ac.ui.cs.a04.json.wallet.repository.WalletRepository;
 import id.ac.ui.cs.a04.json.wallet.repository.WalletTransactionRepository;
+import id.ac.ui.cs.a04.json.wallet.repository.WithdrawalRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,12 +28,14 @@ public class WalletServiceImpl implements WalletService {
 
     private WalletRepository walletRepository;
     private TopUpRequestRepository topUpRequestRepository;
+    private WithdrawalRequestRepository withdrawalRequestRepository;
 
     @Autowired
-    public WalletServiceImpl(WalletTransactionService transactionService, WalletRepository walletRepository, TopUpRequestRepository topUpRequestRepository, WalletTransactionService walletTransactionService) {
+    public WalletServiceImpl(WalletTransactionService transactionService, WalletRepository walletRepository, TopUpRequestRepository topUpRequestRepository, WithdrawalRequestRepository withdrawalRequestRepository) {
         this.walletRepository = walletRepository;
         this.transactionService = transactionService;
         this.topUpRequestRepository = topUpRequestRepository;
+        this.withdrawalRequestRepository = withdrawalRequestRepository;
     }
 
     @Override
@@ -123,19 +127,45 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public Long createWithdrawRequest(Long userId, BigDecimal amount, String destination) {
-        // TODO: Functionality
-        return 0L;
+        WithdrawalRequest result = withdrawalRequestRepository.save(WithdrawalRequest.builder()
+                .userId(userId)
+                .amount(amount)
+                .destination(destination)
+                .status(TransactionStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .build());
+        return result.getId();
     }
 
     @Override
-    public boolean markWithdrawSuccess(Long topUpId) {
-        // TODO: Functionality
+    public boolean markWithdrawSuccess(Long withdrawalId) {
+        // TODO: Atomicity
+        WithdrawalRequest request = withdrawalRequestRepository.getReferenceById(withdrawalId);
+        if (request.getStatus() != TransactionStatus.PENDING) {
+            return false;
+        }
+        request.setStatus(TransactionStatus.SUCCESS);
+        withdrawalRequestRepository.save(request);
+        transactionService.createTransaction(WalletTransactionDTO.builder()
+                .userId(request.getUserId())
+                .type(TransactionType.WITHDRAWAL)
+                .direction(TransactionDirection.CREDIT)
+                .amount(request.getAmount())
+                .status(TransactionStatus.SUCCESS)
+                .refType(TransactionReferenceType.WITHDRAWAL_REQUEST)
+                .refId(request.getId())
+                .build());
         return true;
     }
 
     @Override
-    public boolean markWithdrawFailed(Long topUpId) {
-        // TODO: Functionality
+    public boolean markWithdrawFailed(Long withdrawalId) {
+        WithdrawalRequest request = withdrawalRequestRepository.getReferenceById(withdrawalId);
+        if (request.getStatus() != TransactionStatus.PENDING) {
+            return false;
+        }
+        request.setStatus(TransactionStatus.FAILED);
+        withdrawalRequestRepository.save(request);
         return true;
     }
 }
