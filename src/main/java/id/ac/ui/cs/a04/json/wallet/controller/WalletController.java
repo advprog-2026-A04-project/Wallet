@@ -67,23 +67,23 @@ public class WalletController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<Boolean> withdraw(@RequestBody BigDecimal amount, @RequestBody String destination)  {
-        // TODO: Functionality
+    public ResponseEntity<Long> withdraw(@RequestBody Long userId, @RequestBody BigDecimal amount, @RequestBody String destination)  {
         // TODO: Authentication
-        return ResponseEntity.ok(true);
+        Long id = walletService.createWithdrawRequest(userId, amount, destination);
+        return ResponseEntity.ok(id);
     }
 
     @PostMapping("/withdraw/{id}/mark-success")
-    public ResponseEntity<Boolean> withdrawMarkSuccess() {
-        // TODO: Functionality
+    public ResponseEntity<Boolean> withdrawMarkSuccess(@PathVariable Long id) {
         // TODO: Authentication
-        return ResponseEntity.ok(true);
+        boolean result = walletService.markWithdrawSuccess(id);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/withdraw/{id}/mark-failed")
-    public ResponseEntity<Boolean> withdrawMarkFailed() {
-        // TODO: Functionality
+    public ResponseEntity<Boolean> withdrawMarkFailed(@PathVariable Long id) {
         // TODO: Authentication
+        boolean result = walletService.markWithdrawFailed(id);
         return ResponseEntity.ok(true);
     }
 

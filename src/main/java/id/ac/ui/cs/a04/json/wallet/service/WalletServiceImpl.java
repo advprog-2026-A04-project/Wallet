@@ -90,4 +90,22 @@ public class WalletServiceImpl implements WalletService {
         // TODO: Functionality
         return true;
     }
+
+    @Override
+    public Long createWithdrawRequest(Long userId, BigDecimal amount, String destination) {
+        // TODO: Functionality
+        return 0L;
+    }
+
+    @Override
+    public boolean markWithdrawSuccess(Long topUpId) {
+        // TODO: Functionality
+        return true;
+    }
+
+    @Override
+    public boolean markWithdrawFailed(Long topUpId) {
+        // TODO: Functionality
+        return true;
+    }
 }
