@@ -22,7 +22,6 @@ import java.util.List;
 @Service
 public class WalletServiceImpl implements WalletService {
 
-    private final WalletTransactionService walletTransactionService;
     private WalletTransactionService transactionService;
 
     private WalletRepository walletRepository;
@@ -33,7 +32,6 @@ public class WalletServiceImpl implements WalletService {
         this.walletRepository = walletRepository;
         this.transactionService = transactionService;
         this.topUpRequestRepository = topUpRequestRepository;
-        this.walletTransactionService = walletTransactionService;
     }
 
     @Override
@@ -100,7 +98,7 @@ public class WalletServiceImpl implements WalletService {
         }
         request.setStatus(TransactionStatus.SUCCESS);
         topUpRequestRepository.save(request);
-        walletTransactionService.createTransaction(WalletTransactionDTO.builder()
+        transactionService.createTransaction(WalletTransactionDTO.builder()
                 .userId(request.getUserId())
                 .type(TransactionType.TOPUP)
                 .direction(TransactionDirection.DEBIT)
