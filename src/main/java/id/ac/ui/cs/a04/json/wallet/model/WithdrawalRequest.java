@@ -3,6 +3,8 @@ package id.ac.ui.cs.a04.json.wallet.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,6 +27,8 @@ public class WithdrawalRequest {
     private Long userId;
     private BigDecimal amount;
     private String destination;
+
+    @Enumerated(EnumType.STRING)
     private TransactionStatus status;
     private LocalDateTime createdAt;
 }

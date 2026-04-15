@@ -2,6 +2,7 @@ package id.ac.ui.cs.a04.json.wallet.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,8 @@ import java.math.BigDecimal;
 public class Wallet {
     @Id
     private Long userId;
+
+    @Column(nullable = false)
     private BigDecimal balance;
 
     public BigDecimal decreaseBalance(BigDecimal amount) {

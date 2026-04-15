@@ -1,104 +1,127 @@
 package id.ac.ui.cs.a04.json.wallet.controller;
 
-import id.ac.ui.cs.a04.json.wallet.model.TransactionDirection;
-import id.ac.ui.cs.a04.json.wallet.model.TransactionReferenceType;
-import id.ac.ui.cs.a04.json.wallet.model.TransactionStatus;
-import id.ac.ui.cs.a04.json.wallet.model.TransactionType;
+import id.ac.ui.cs.a04.json.wallet.dto.OrderAmountRequest;
+import id.ac.ui.cs.a04.json.wallet.dto.RequestStatusResponse;
+import id.ac.ui.cs.a04.json.wallet.dto.TopUpRequestDto;
+import id.ac.ui.cs.a04.json.wallet.dto.UserIdRequest;
+import id.ac.ui.cs.a04.json.wallet.dto.WalletBalanceResponse;
+import id.ac.ui.cs.a04.json.wallet.dto.WithdrawRequestDto;
 import id.ac.ui.cs.a04.json.wallet.model.WalletTransaction;
 import id.ac.ui.cs.a04.json.wallet.service.WalletService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/wallet")
 public class WalletController {
 
-    private WalletService walletService;
+    private final WalletService walletService;
 
-    @Autowired
     public WalletController(WalletService walletService) {
         this.walletService = walletService;
     }
 
-    @GetMapping("/balance")
-    public ResponseEntity<BigDecimal> getBalance(@RequestBody Long userId) {
-        // TODO: Authentication
-        BigDecimal balance = walletService.getWalletByUserId(userId).getBalance();
-        return ResponseEntity.ok(balance);
+    @PostMapping("/balance")
+    public ResponseEntity<WalletBalanceResponse> getBalance(
+            Authentication authentication,
+            @Valid @RequestBody UserIdRequest request
+    ) {
+        requireUserAccess(authentication, request.userId(), true);
+        return ResponseEntity.ok(walletService.getBalance(request.userId()));
     }
 
-    @GetMapping("/transactions")
-    public ResponseEntity<List<WalletTransaction>> getTransactions() {
-        // TODO: Authentication
-        List<WalletTransaction> list = walletService.getAllTransactions();
-        return ResponseEntity.ok(list);
+    @PostMapping("/transactions")
+    public ResponseEntity<List<WalletTransaction>> getTransactions(
+            Authentication authentication,
+            @Valid @RequestBody UserIdRequest request
+    ) {
+        requireUserAccess(authentication, request.userId(), true);
+        return ResponseEntity.ok(walletService.getTransactions(request.userId()));
     }
 
     @PostMapping("/topup")
-    public ResponseEntity<Long> topUp(@RequestBody Long userId, @RequestBody BigDecimal amount)  {
-        // TODO: Authentication
-        Long topUpId = walletService.createTopUpRequest(userId, amount);
-        return ResponseEntity.ok(topUpId);
+    public ResponseEntity<RequestStatusResponse> topUp(
+            Authentication authentication,
+            @Valid @RequestBody TopUpRequestDto request
+    ) {
+        requireUserAccess(authentication, request.userId(), false);
+        Long topUpId = walletService.createTopUpRequest(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new RequestStatusResponse(topUpId, true));
     }
 
     @PostMapping("/topup/{id}/mark-success")
-    public ResponseEntity<Boolean> topUpMarkSuccess(@PathVariable Long id) {
-        // TODO: Authentication
-        boolean result = walletService.markTopUpSuccess(id);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<RequestStatusResponse> topUpMarkSuccess(@PathVariable Long id) {
+        return ResponseEntity.ok(new RequestStatusResponse(id, walletService.markTopUpSuccess(id)));
     }
 
     @PostMapping("/topup/{id}/mark-failed")
-    public ResponseEntity<Boolean> topUpMarkFailed(@PathVariable Long id) {
-        // TODO: Authentication
-        boolean result = walletService.markTopUpFailed(id);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<RequestStatusResponse> topUpMarkFailed(@PathVariable Long id) {
+        return ResponseEntity.ok(new RequestStatusResponse(id, walletService.markTopUpFailed(id)));
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<Long> withdraw(@RequestBody Long userId, @RequestBody BigDecimal amount, @RequestBody String destination)  {
-        // TODO: Authentication
-        Long id = walletService.createWithdrawRequest(userId, amount, destination);
-        return ResponseEntity.ok(id);
+    public ResponseEntity<RequestStatusResponse> withdraw(
+            Authentication authentication,
+            @Valid @RequestBody WithdrawRequestDto request
+    ) {
+        requireUserAccess(authentication, request.userId(), false);
+        Long withdrawalId = walletService.createWithdrawRequest(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new RequestStatusResponse(withdrawalId, true));
     }
 
     @PostMapping("/withdraw/{id}/mark-success")
-    public ResponseEntity<Boolean> withdrawMarkSuccess(@PathVariable Long id) {
-        // TODO: Authentication
-        boolean result = walletService.markWithdrawSuccess(id);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<RequestStatusResponse> withdrawMarkSuccess(@PathVariable Long id) {
+        return ResponseEntity.ok(new RequestStatusResponse(id, walletService.markWithdrawSuccess(id)));
     }
 
     @PostMapping("/withdraw/{id}/mark-failed")
-    public ResponseEntity<Boolean> withdrawMarkFailed(@PathVariable Long id) {
-        // TODO: Authentication
-        boolean result = walletService.markWithdrawFailed(id);
-        return ResponseEntity.ok(true);
+    public ResponseEntity<RequestStatusResponse> withdrawMarkFailed(@PathVariable Long id) {
+        return ResponseEntity.ok(new RequestStatusResponse(id, walletService.markWithdrawFailed(id)));
     }
 
     @PostMapping("/deduct")
-    public ResponseEntity<BigDecimal> deduct(@RequestBody Long userId, @RequestBody BigDecimal amount, @RequestBody Long orderId) {
-        // TODO: Authentication
-        BigDecimal newBalance = walletService.deduct(userId, orderId, amount);
-        return ResponseEntity.ok(newBalance);
+    public ResponseEntity<WalletBalanceResponse> deduct(
+            Authentication authentication,
+            @Valid @RequestBody OrderAmountRequest request
+    ) {
+        requireUserAccess(authentication, request.userId(), true);
+        return ResponseEntity.ok(walletService.deduct(request.userId(), request.orderId(), request.amount()));
     }
 
     @PostMapping("/refund")
-    public ResponseEntity<BigDecimal> refund(@RequestBody Long userId, @RequestBody BigDecimal amount, @RequestBody Long orderId) {
-        // TODO: Authentication
-        BigDecimal newBalance = walletService.refund(userId, orderId, amount);
-        return ResponseEntity.ok(newBalance);
+    public ResponseEntity<WalletBalanceResponse> refund(
+            Authentication authentication,
+            @Valid @RequestBody OrderAmountRequest request
+    ) {
+        requireUserAccess(authentication, request.userId(), true);
+        return ResponseEntity.ok(walletService.refund(request.userId(), request.orderId(), request.amount()));
     }
 
+    private void requireUserAccess(Authentication authentication, Long userId, boolean allowInternal) {
+        if (authentication == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication is required.");
+        }
+
+        boolean internal = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_INTERNAL"::equals);
+
+        if (allowInternal && internal) {
+            return;
+        }
+
+        if (!String.valueOf(userId).equals(authentication.getName())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may only access your own wallet.");
+        }
+    }
 }
