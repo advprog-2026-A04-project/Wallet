@@ -13,22 +13,22 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/wallet")
 public class WalletController {
 
     private final WalletService walletService;
+    private final WalletAccessGuard walletAccessGuard;
 
-    public WalletController(WalletService walletService) {
+    public WalletController(WalletService walletService, WalletAccessGuard walletAccessGuard) {
         this.walletService = walletService;
+        this.walletAccessGuard = walletAccessGuard;
     }
 
     @PostMapping("/balance")
@@ -36,7 +36,7 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody UserIdRequest request
     ) {
-        requireUserAccess(authentication, request.userId(), true);
+        walletAccessGuard.requireUserAccess(authentication, request.userId(), true);
         return ResponseEntity.ok(walletService.getBalance(request.userId()));
     }
 
@@ -45,7 +45,7 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody UserIdRequest request
     ) {
-        requireUserAccess(authentication, request.userId(), true);
+        walletAccessGuard.requireUserAccess(authentication, request.userId(), true);
         return ResponseEntity.ok(walletService.getTransactions(request.userId()));
     }
 
@@ -54,7 +54,7 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody TopUpRequestDto request
     ) {
-        requireUserAccess(authentication, request.userId(), false);
+        walletAccessGuard.requireUserAccess(authentication, request.userId(), false);
         Long topUpId = walletService.createTopUpRequest(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new RequestStatusResponse(topUpId, true));
     }
@@ -74,7 +74,7 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody WithdrawRequestDto request
     ) {
-        requireUserAccess(authentication, request.userId(), false);
+        walletAccessGuard.requireUserAccess(authentication, request.userId(), false);
         Long withdrawalId = walletService.createWithdrawRequest(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new RequestStatusResponse(withdrawalId, true));
     }
@@ -94,7 +94,7 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody OrderAmountRequest request
     ) {
-        requireUserAccess(authentication, request.userId(), true);
+        walletAccessGuard.requireUserAccess(authentication, request.userId(), true);
         return ResponseEntity.ok(walletService.deduct(request.userId(), request.orderId(), request.amount()));
     }
 
@@ -103,25 +103,7 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody OrderAmountRequest request
     ) {
-        requireUserAccess(authentication, request.userId(), true);
+        walletAccessGuard.requireUserAccess(authentication, request.userId(), true);
         return ResponseEntity.ok(walletService.refund(request.userId(), request.orderId(), request.amount()));
-    }
-
-    private void requireUserAccess(Authentication authentication, Long userId, boolean allowInternal) {
-        if (authentication == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication is required.");
-        }
-
-        boolean internal = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_INTERNAL"::equals);
-
-        if (allowInternal && internal) {
-            return;
-        }
-
-        if (!String.valueOf(userId).equals(authentication.getName())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may only access your own wallet.");
-        }
     }
 }

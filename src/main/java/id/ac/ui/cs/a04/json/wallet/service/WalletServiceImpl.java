@@ -32,17 +32,20 @@ public class WalletServiceImpl implements WalletService {
     private final WalletTransactionRepository transactionRepository;
     private final TopUpRequestRepository topUpRequestRepository;
     private final WithdrawalRequestRepository withdrawalRequestRepository;
+    private final WalletTransactionFactory walletTransactionFactory;
 
     public WalletServiceImpl(
             WalletRepository walletRepository,
             WalletTransactionRepository transactionRepository,
             TopUpRequestRepository topUpRequestRepository,
-            WithdrawalRequestRepository withdrawalRequestRepository
+            WithdrawalRequestRepository withdrawalRequestRepository,
+            WalletTransactionFactory walletTransactionFactory
     ) {
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
         this.topUpRequestRepository = topUpRequestRepository;
         this.withdrawalRequestRepository = withdrawalRequestRepository;
+        this.walletTransactionFactory = walletTransactionFactory;
     }
 
     @Override
@@ -87,16 +90,11 @@ public class WalletServiceImpl implements WalletService {
         request.setStatus(TransactionStatus.SUCCESS);
         topUpRequestRepository.save(request);
 
-        transactionRepository.save(WalletTransaction.builder()
-                .userId(request.getUserId())
-                .type(TransactionType.TOPUP)
-                .direction(TransactionDirection.CREDIT)
-                .amount(request.getAmount())
-                .status(TransactionStatus.SUCCESS)
-                .refType(TransactionReferenceType.TOPUP_REQUEST)
-                .refId(request.getId())
-                .createdAt(LocalDateTime.now())
-                .build());
+        transactionRepository.save(walletTransactionFactory.topUpSuccess(
+                request.getUserId(),
+                request.getId(),
+                request.getAmount()
+        ));
         return true;
     }
 
@@ -147,16 +145,11 @@ public class WalletServiceImpl implements WalletService {
         request.setStatus(TransactionStatus.SUCCESS);
         withdrawalRequestRepository.save(request);
 
-        transactionRepository.save(WalletTransaction.builder()
-                .userId(request.getUserId())
-                .type(TransactionType.WITHDRAWAL)
-                .direction(TransactionDirection.DEBIT)
-                .amount(request.getAmount())
-                .status(TransactionStatus.SUCCESS)
-                .refType(TransactionReferenceType.WITHDRAWAL_REQUEST)
-                .refId(request.getId())
-                .createdAt(LocalDateTime.now())
-                .build());
+        transactionRepository.save(walletTransactionFactory.withdrawSuccess(
+                request.getUserId(),
+                request.getId(),
+                request.getAmount()
+        ));
         return true;
     }
 
@@ -194,16 +187,7 @@ public class WalletServiceImpl implements WalletService {
         }
         walletRepository.save(wallet);
 
-        transactionRepository.save(WalletTransaction.builder()
-                .userId(userId)
-                .type(TransactionType.PAYMENT)
-                .direction(TransactionDirection.DEBIT)
-                .amount(amount)
-                .status(TransactionStatus.SUCCESS)
-                .refType(TransactionReferenceType.ORDER)
-                .refId(orderId)
-                .createdAt(LocalDateTime.now())
-                .build());
+        transactionRepository.save(walletTransactionFactory.payment(userId, orderId, amount));
         return toBalanceResponse(wallet);
     }
 
@@ -224,16 +208,7 @@ public class WalletServiceImpl implements WalletService {
         wallet.increaseBalance(amount);
         walletRepository.save(wallet);
 
-        transactionRepository.save(WalletTransaction.builder()
-                .userId(userId)
-                .type(TransactionType.REFUND)
-                .direction(TransactionDirection.CREDIT)
-                .amount(amount)
-                .status(TransactionStatus.SUCCESS)
-                .refType(TransactionReferenceType.ORDER)
-                .refId(orderId)
-                .createdAt(LocalDateTime.now())
-                .build());
+        transactionRepository.save(walletTransactionFactory.refund(userId, orderId, amount));
         return toBalanceResponse(wallet);
     }
 
