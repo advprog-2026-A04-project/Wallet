@@ -53,4 +53,16 @@ class WalletAccessGuardTest {
 
         assertDoesNotThrow(() -> guard.requireUserAccess(auth, 7L, false));
     }
+
+    @Test
+    void shouldRejectInternalPrincipalWhenInternalAccessIsNotAllowed() {
+        var auth = new UsernamePasswordAuthenticationToken("internal-service", null, List.of(() -> "ROLE_INTERNAL"));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> guard.requireUserAccess(auth, 7L, false)
+        );
+
+        assertEquals(403, exception.getStatusCode().value());
+    }
 }
