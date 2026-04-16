@@ -66,7 +66,6 @@ tasks.jacocoTestReport {
         files(classDirectories.files.map {
             fileTree(it) {
                 exclude("**/WalletApplication*")
-                exclude("**/controller/SpaController*")
             }
         })
     )
@@ -78,7 +77,6 @@ tasks.jacocoTestCoverageVerification {
         files(classDirectories.files.map {
             fileTree(it) {
                 exclude("**/WalletApplication*")
-                exclude("**/controller/SpaController*")
             }
         })
     )
@@ -87,6 +85,11 @@ tasks.jacocoTestCoverageVerification {
             element = "BUNDLE"
             limit {
                 counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.90".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
                 value = "COVEREDRATIO"
                 minimum = "0.90".toBigDecimal()
             }
