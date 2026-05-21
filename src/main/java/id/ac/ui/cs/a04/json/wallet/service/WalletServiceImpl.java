@@ -77,6 +77,13 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     @Transactional
+    public Long getUserIdFromTopUpRequest(Long topUpId) {
+        TopUpRequest request = requireTopUpRequest(topUpId);
+        return request.getUserId();
+    }
+
+    @Override
+    @Transactional
     public boolean markTopUpSuccess(Long topUpId) {
         TopUpRequest request = requireTopUpRequest(topUpId);
         if (request.getStatus() != TransactionStatus.PENDING) {
@@ -124,6 +131,13 @@ public class WalletServiceImpl implements WalletService {
                 .createdAt(LocalDateTime.now())
                 .build());
         return result.getId();
+    }
+
+    @Override
+    @Transactional
+    public Long getUserIdFromWithdrawRequest(Long withdrawalId) {
+        WithdrawalRequest request = requireWithdrawalRequest(withdrawalId);
+        return request.getUserId();
     }
 
     @Override

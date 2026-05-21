@@ -11,9 +11,11 @@ public interface WalletService {
     WalletBalanceResponse getBalance(Long userId);
     List<WalletTransaction> getTransactions(Long userId);
     Long createTopUpRequest(TopUpRequestDto request);
+    Long getUserIdFromTopUpRequest(Long topUpId);
     boolean markTopUpSuccess(Long topUpId);
     boolean markTopUpFailed(Long topUpId);
     Long createWithdrawRequest(WithdrawRequestDto request);
+    Long getUserIdFromWithdrawRequest(Long topUpId);
     boolean markWithdrawSuccess(Long withdrawalId);
     boolean markWithdrawFailed(Long withdrawalId);
     WalletBalanceResponse deduct(Long userId, Long orderId, BigDecimal amount);
