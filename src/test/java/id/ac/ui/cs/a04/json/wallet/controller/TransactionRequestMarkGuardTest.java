@@ -18,7 +18,7 @@ class TransactionRequestMarkGuardTest {
     void shouldRejectMissingAuthentication() {
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> guard.requireMarkPermission(null)
+                () -> guard.requireMarkPermission(null, 2L)
         );
 
         assertEquals(401, exception.getStatusCode().value());
@@ -31,17 +31,30 @@ class TransactionRequestMarkGuardTest {
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> guard.requireMarkPermission(auth)
+                () -> guard.requireMarkPermission(auth, 2L)
         );
 
         assertEquals(403, exception.getStatusCode().value());
     }
 
     @Test
-    void shouldAllowAdmin() {
+    void shouldRejectSelfMark() {
         var auth = new UsernamePasswordAuthenticationToken(
                 "7", null, List.of(() -> "ROLE_ADMIN"));
 
-        assertDoesNotThrow(() -> guard.requireMarkPermission(auth));
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> guard.requireMarkPermission(auth, 7L)
+        );
+
+        assertEquals(403, exception.getStatusCode().value());
+    }
+
+    @Test
+    void shouldAllowAdminAndNotSelfMark() {
+        var auth = new UsernamePasswordAuthenticationToken(
+                "7", null, List.of(() -> "ROLE_ADMIN"));
+
+        assertDoesNotThrow(() -> guard.requireMarkPermission(auth, 2L));
     }
 }
