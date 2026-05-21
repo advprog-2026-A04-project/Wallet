@@ -26,4 +26,29 @@ public class WalletAccessGuard {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may only access your own wallet.");
         }
     }
+
+    /**
+     * Check if the authenticated user is allowed to mark top-up/withdrawal requests
+     * issued by the user with the given id.
+     *
+     * @param authentication The authenticated user
+     * @param requestUserId The id of the user making the top-up/withdrawal request
+     */
+    public void requireMarkPermission(Authentication authentication, Long requestUserId) {
+        if (authentication == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication is required.");
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_ADMIN"::equals);
+
+        if (!isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Permission denied.");
+        }
+
+        if (String.valueOf(requestUserId).equals(authentication.getName())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot mark your own top-up/withdrawal requests.");
+        }
+    }
 }
