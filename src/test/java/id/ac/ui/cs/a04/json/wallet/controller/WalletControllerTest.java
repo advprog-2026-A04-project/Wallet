@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,22 +69,30 @@ class WalletControllerTest {
     @Test
     void topUpMarkSuccessShouldReturnServiceResult() {
         WalletService service = mock(WalletService.class);
-        WalletController controller = new WalletController(service, mock(WalletAccessGuard.class));
+        WalletAccessGuard guard = mock(WalletAccessGuard.class);
+        WalletController controller = new WalletController(service, guard);
         when(service.markTopUpSuccess(3L)).thenReturn(true);
 
-        var entity = controller.topUpMarkSuccess(3L);
+        var entity = controller.topUpMarkSuccess(
+                new UsernamePasswordAuthenticationToken("1", null),
+                3L);
 
+        verify(guard).requireMarkPermission(any(), any());
         assertEquals(new RequestStatusResponse(3L, true), entity.getBody());
     }
 
     @Test
     void topUpMarkFailedShouldReturnServiceResult() {
         WalletService service = mock(WalletService.class);
-        WalletController controller = new WalletController(service, mock(WalletAccessGuard.class));
+        WalletAccessGuard guard = mock(WalletAccessGuard.class);
+        WalletController controller = new WalletController(service, guard);
         when(service.markTopUpFailed(4L)).thenReturn(false);
 
-        var entity = controller.topUpMarkFailed(4L);
+        var entity = controller.topUpMarkFailed(
+                new UsernamePasswordAuthenticationToken("1", null),
+                4L);
 
+        verify(guard).requireMarkPermission(any(), any());
         assertEquals(new RequestStatusResponse(4L, false), entity.getBody());
     }
 
@@ -104,22 +113,30 @@ class WalletControllerTest {
     @Test
     void withdrawMarkSuccessShouldReturnServiceResult() {
         WalletService service = mock(WalletService.class);
-        WalletController controller = new WalletController(service, mock(WalletAccessGuard.class));
+        WalletAccessGuard guard = mock(WalletAccessGuard.class);
+        WalletController controller = new WalletController(service, guard);
         when(service.markWithdrawSuccess(5L)).thenReturn(true);
 
-        var entity = controller.withdrawMarkSuccess(5L);
+        var entity = controller.withdrawMarkSuccess(
+                new UsernamePasswordAuthenticationToken("1", null),
+                5L);
 
+        verify(guard).requireMarkPermission(any(), any());
         assertEquals(new RequestStatusResponse(5L, true), entity.getBody());
     }
 
     @Test
     void withdrawMarkFailedShouldReturnServiceResult() {
         WalletService service = mock(WalletService.class);
-        WalletController controller = new WalletController(service, mock(WalletAccessGuard.class));
+        WalletAccessGuard guard = mock(WalletAccessGuard.class);
+        WalletController controller = new WalletController(service, guard);
         when(service.markWithdrawFailed(6L)).thenReturn(false);
 
-        var entity = controller.withdrawMarkFailed(6L);
+        var entity = controller.withdrawMarkFailed(
+                new UsernamePasswordAuthenticationToken("1", null),
+                6L);
 
+        verify(guard).requireMarkPermission(any(), any());
         assertEquals(new RequestStatusResponse(6L, false), entity.getBody());
     }
 
