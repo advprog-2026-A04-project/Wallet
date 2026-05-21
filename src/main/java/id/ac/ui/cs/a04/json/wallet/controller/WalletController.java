@@ -60,12 +60,22 @@ public class WalletController {
     }
 
     @PostMapping("/topup/{id}/mark-success")
-    public ResponseEntity<RequestStatusResponse> topUpMarkSuccess(@PathVariable Long id) {
+    public ResponseEntity<RequestStatusResponse> topUpMarkSuccess(
+            Authentication authentication,
+            @PathVariable Long id
+    ) {
+        Long requestUserId = walletService.getUserIdFromTopUpRequest(id);
+        walletAccessGuard.requireMarkPermission(authentication, requestUserId);
         return ResponseEntity.ok(new RequestStatusResponse(id, walletService.markTopUpSuccess(id)));
     }
 
     @PostMapping("/topup/{id}/mark-failed")
-    public ResponseEntity<RequestStatusResponse> topUpMarkFailed(@PathVariable Long id) {
+    public ResponseEntity<RequestStatusResponse> topUpMarkFailed(
+        Authentication authentication,
+        @PathVariable Long id
+    ) {
+        Long requestUserId = walletService.getUserIdFromTopUpRequest(id);
+        walletAccessGuard.requireMarkPermission(authentication, requestUserId);
         return ResponseEntity.ok(new RequestStatusResponse(id, walletService.markTopUpFailed(id)));
     }
 
@@ -80,12 +90,22 @@ public class WalletController {
     }
 
     @PostMapping("/withdraw/{id}/mark-success")
-    public ResponseEntity<RequestStatusResponse> withdrawMarkSuccess(@PathVariable Long id) {
+    public ResponseEntity<RequestStatusResponse> withdrawMarkSuccess(
+            Authentication authentication,
+            @PathVariable Long id
+    ) {
+        Long requestUserId = walletService.getUserIdFromWithdrawRequest(id);
+        walletAccessGuard.requireMarkPermission(authentication, requestUserId);
         return ResponseEntity.ok(new RequestStatusResponse(id, walletService.markWithdrawSuccess(id)));
     }
 
     @PostMapping("/withdraw/{id}/mark-failed")
-    public ResponseEntity<RequestStatusResponse> withdrawMarkFailed(@PathVariable Long id) {
+    public ResponseEntity<RequestStatusResponse> withdrawMarkFailed(
+            Authentication authentication,
+            @PathVariable Long id
+    ) {
+        Long requestUserId = walletService.getUserIdFromWithdrawRequest(id);
+        walletAccessGuard.requireMarkPermission(authentication, requestUserId);
         return ResponseEntity.ok(new RequestStatusResponse(id, walletService.markWithdrawFailed(id)));
     }
 

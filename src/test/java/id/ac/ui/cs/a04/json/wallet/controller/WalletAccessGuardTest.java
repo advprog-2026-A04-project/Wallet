@@ -65,4 +65,48 @@ class WalletAccessGuardTest {
 
         assertEquals(403, exception.getStatusCode().value());
     }
+
+    @Test
+    void requireMarkPermissionShouldRejectMissingAuthentication() {
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> guard.requireMarkPermission(null, 2L)
+        );
+
+        assertEquals(401, exception.getStatusCode().value());
+    }
+
+    @Test
+    void requireMarkPermissionShouldRejectNonAdmin() {
+        var auth = new UsernamePasswordAuthenticationToken(
+                "1", null, List.of(() -> "ROLE_TITIPER"));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> guard.requireMarkPermission(auth, 2L)
+        );
+
+        assertEquals(403, exception.getStatusCode().value());
+    }
+
+    @Test
+    void requireMarkPermissionShouldRejectSelfMark() {
+        var auth = new UsernamePasswordAuthenticationToken(
+                "7", null, List.of(() -> "ROLE_ADMIN"));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> guard.requireMarkPermission(auth, 7L)
+        );
+
+        assertEquals(403, exception.getStatusCode().value());
+    }
+
+    @Test
+    void requireMarkPermissionShouldAllowAdminAndNotSelfMark() {
+        var auth = new UsernamePasswordAuthenticationToken(
+                "7", null, List.of(() -> "ROLE_ADMIN"));
+
+        assertDoesNotThrow(() -> guard.requireMarkPermission(auth, 2L));
+    }
 }
