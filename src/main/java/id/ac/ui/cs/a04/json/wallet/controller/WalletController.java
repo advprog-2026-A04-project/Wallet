@@ -6,13 +6,16 @@ import id.ac.ui.cs.a04.json.wallet.dto.TopUpRequestDto;
 import id.ac.ui.cs.a04.json.wallet.dto.UserIdRequest;
 import id.ac.ui.cs.a04.json.wallet.dto.WalletBalanceResponse;
 import id.ac.ui.cs.a04.json.wallet.dto.WithdrawRequestDto;
+import id.ac.ui.cs.a04.json.wallet.model.TopUpRequest;
 import id.ac.ui.cs.a04.json.wallet.model.WalletTransaction;
+import id.ac.ui.cs.a04.json.wallet.model.WithdrawalRequest;
 import id.ac.ui.cs.a04.json.wallet.service.WalletService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -125,5 +128,23 @@ public class WalletController {
     ) {
         walletAccessGuard.requireUserAccess(authentication, request.userId(), true);
         return ResponseEntity.ok(walletService.refund(request.userId(), request.orderId(), request.amount()));
+    }
+
+    @GetMapping("/admin/transactions")
+    public ResponseEntity<List<WalletTransaction>> adminTransactions(Authentication authentication) {
+        walletAccessGuard.requireAdminOrInternal(authentication);
+        return ResponseEntity.ok(walletService.getAllTransactions());
+    }
+
+    @GetMapping("/admin/topups")
+    public ResponseEntity<List<TopUpRequest>> adminTopUpRequests(Authentication authentication) {
+        walletAccessGuard.requireAdminOrInternal(authentication);
+        return ResponseEntity.ok(walletService.getTopUpRequests());
+    }
+
+    @GetMapping("/admin/withdrawals")
+    public ResponseEntity<List<WithdrawalRequest>> adminWithdrawalRequests(Authentication authentication) {
+        walletAccessGuard.requireAdminOrInternal(authentication);
+        return ResponseEntity.ok(walletService.getWithdrawalRequests());
     }
 }

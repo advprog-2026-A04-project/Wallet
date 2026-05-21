@@ -6,17 +6,19 @@ import id.ac.ui.cs.a04.json.wallet.dto.TopUpRequestDto;
 import id.ac.ui.cs.a04.json.wallet.dto.UserIdRequest;
 import id.ac.ui.cs.a04.json.wallet.dto.WalletBalanceResponse;
 import id.ac.ui.cs.a04.json.wallet.dto.WithdrawRequestDto;
+import id.ac.ui.cs.a04.json.wallet.model.TopUpRequest;
 import id.ac.ui.cs.a04.json.wallet.model.WalletTransaction;
+import id.ac.ui.cs.a04.json.wallet.model.WithdrawalRequest;
 import id.ac.ui.cs.a04.json.wallet.service.WalletService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -72,12 +74,12 @@ class WalletControllerTest {
         WalletAccessGuard guard = mock(WalletAccessGuard.class);
         WalletController controller = new WalletController(service, guard);
         when(service.markTopUpSuccess(3L)).thenReturn(true);
+        when(service.getUserIdFromTopUpRequest(3L)).thenReturn(2L);
+        var admin = new UsernamePasswordAuthenticationToken("9001", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
 
-        var entity = controller.topUpMarkSuccess(
-                new UsernamePasswordAuthenticationToken("1", null),
-                3L);
+        var entity = controller.topUpMarkSuccess(admin, 3L);
 
-        verify(guard).requireMarkPermission(any(), any());
+        verify(guard).requireMarkPermission(admin, 2L);
         assertEquals(new RequestStatusResponse(3L, true), entity.getBody());
     }
 
@@ -87,12 +89,12 @@ class WalletControllerTest {
         WalletAccessGuard guard = mock(WalletAccessGuard.class);
         WalletController controller = new WalletController(service, guard);
         when(service.markTopUpFailed(4L)).thenReturn(false);
+        when(service.getUserIdFromTopUpRequest(4L)).thenReturn(2L);
+        var admin = new UsernamePasswordAuthenticationToken("9001", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
 
-        var entity = controller.topUpMarkFailed(
-                new UsernamePasswordAuthenticationToken("1", null),
-                4L);
+        var entity = controller.topUpMarkFailed(admin, 4L);
 
-        verify(guard).requireMarkPermission(any(), any());
+        verify(guard).requireMarkPermission(admin, 2L);
         assertEquals(new RequestStatusResponse(4L, false), entity.getBody());
     }
 
@@ -116,12 +118,12 @@ class WalletControllerTest {
         WalletAccessGuard guard = mock(WalletAccessGuard.class);
         WalletController controller = new WalletController(service, guard);
         when(service.markWithdrawSuccess(5L)).thenReturn(true);
+        when(service.getUserIdFromWithdrawRequest(5L)).thenReturn(2L);
+        var admin = new UsernamePasswordAuthenticationToken("9001", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
 
-        var entity = controller.withdrawMarkSuccess(
-                new UsernamePasswordAuthenticationToken("1", null),
-                5L);
+        var entity = controller.withdrawMarkSuccess(admin, 5L);
 
-        verify(guard).requireMarkPermission(any(), any());
+        verify(guard).requireMarkPermission(admin, 2L);
         assertEquals(new RequestStatusResponse(5L, true), entity.getBody());
     }
 
@@ -131,12 +133,12 @@ class WalletControllerTest {
         WalletAccessGuard guard = mock(WalletAccessGuard.class);
         WalletController controller = new WalletController(service, guard);
         when(service.markWithdrawFailed(6L)).thenReturn(false);
+        when(service.getUserIdFromWithdrawRequest(6L)).thenReturn(2L);
+        var admin = new UsernamePasswordAuthenticationToken("9001", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
 
-        var entity = controller.withdrawMarkFailed(
-                new UsernamePasswordAuthenticationToken("1", null),
-                6L);
+        var entity = controller.withdrawMarkFailed(admin, 6L);
 
-        verify(guard).requireMarkPermission(any(), any());
+        verify(guard).requireMarkPermission(admin, 2L);
         assertEquals(new RequestStatusResponse(6L, false), entity.getBody());
     }
 
@@ -166,5 +168,50 @@ class WalletControllerTest {
         var entity = controller.refund(new UsernamePasswordAuthenticationToken("1", null), request);
 
         assertEquals(response, entity.getBody());
+    }
+
+    @Test
+    void adminTransactionsShouldAuthorizeAndDelegate() {
+        WalletService service = mock(WalletService.class);
+        WalletAccessGuard guard = mock(WalletAccessGuard.class);
+        WalletController controller = new WalletController(service, guard);
+        var admin = new UsernamePasswordAuthenticationToken("9001", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        when(service.getAllTransactions()).thenReturn(List.of(mock(WalletTransaction.class)));
+
+        var entity = controller.adminTransactions(admin);
+
+        verify(guard).requireAdminOrInternal(admin);
+        assertEquals(HttpStatus.OK, entity.getStatusCode());
+        assertEquals(1, entity.getBody().size());
+    }
+
+    @Test
+    void adminTopUpRequestsShouldAuthorizeAndDelegate() {
+        WalletService service = mock(WalletService.class);
+        WalletAccessGuard guard = mock(WalletAccessGuard.class);
+        WalletController controller = new WalletController(service, guard);
+        var admin = new UsernamePasswordAuthenticationToken("9001", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        when(service.getTopUpRequests()).thenReturn(List.of(mock(TopUpRequest.class)));
+
+        var entity = controller.adminTopUpRequests(admin);
+
+        verify(guard).requireAdminOrInternal(admin);
+        assertEquals(HttpStatus.OK, entity.getStatusCode());
+        assertEquals(1, entity.getBody().size());
+    }
+
+    @Test
+    void adminWithdrawalRequestsShouldAuthorizeAndDelegate() {
+        WalletService service = mock(WalletService.class);
+        WalletAccessGuard guard = mock(WalletAccessGuard.class);
+        WalletController controller = new WalletController(service, guard);
+        var admin = new UsernamePasswordAuthenticationToken("9001", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        when(service.getWithdrawalRequests()).thenReturn(List.of(mock(WithdrawalRequest.class)));
+
+        var entity = controller.adminWithdrawalRequests(admin);
+
+        verify(guard).requireAdminOrInternal(admin);
+        assertEquals(HttpStatus.OK, entity.getStatusCode());
+        assertEquals(1, entity.getBody().size());
     }
 }

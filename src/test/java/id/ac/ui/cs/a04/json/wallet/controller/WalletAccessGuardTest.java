@@ -67,6 +67,42 @@ class WalletAccessGuardTest {
     }
 
     @Test
+    void shouldRejectMissingAuthenticationForAdminOrInternalAccess() {
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> guard.requireAdminOrInternal(null)
+        );
+
+        assertEquals(401, exception.getStatusCode().value());
+    }
+
+    @Test
+    void shouldAllowAdminForAdminOrInternalAccess() {
+        var auth = new UsernamePasswordAuthenticationToken("9001", null, List.of(() -> "ROLE_ADMIN"));
+
+        assertDoesNotThrow(() -> guard.requireAdminOrInternal(auth));
+    }
+
+    @Test
+    void shouldAllowInternalForAdminOrInternalAccess() {
+        var auth = new UsernamePasswordAuthenticationToken("internal-service", null, List.of(() -> "ROLE_INTERNAL"));
+
+        assertDoesNotThrow(() -> guard.requireAdminOrInternal(auth));
+    }
+
+    @Test
+    void shouldRejectRegularUserForAdminOrInternalAccess() {
+        var auth = new UsernamePasswordAuthenticationToken("7", null, List.of(() -> "ROLE_TITIPER"));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> guard.requireAdminOrInternal(auth)
+        );
+
+        assertEquals(403, exception.getStatusCode().value());
+    }
+
+    @Test
     void requireMarkPermissionShouldRejectMissingAuthentication() {
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
@@ -106,6 +142,13 @@ class WalletAccessGuardTest {
     void requireMarkPermissionShouldAllowAdminAndNotSelfMark() {
         var auth = new UsernamePasswordAuthenticationToken(
                 "7", null, List.of(() -> "ROLE_ADMIN"));
+
+        assertDoesNotThrow(() -> guard.requireMarkPermission(auth, 2L));
+    }
+
+    @Test
+    void requireMarkPermissionShouldAllowInternalService() {
+        var auth = new UsernamePasswordAuthenticationToken("internal-service", null, List.of(() -> "ROLE_INTERNAL"));
 
         assertDoesNotThrow(() -> guard.requireMarkPermission(auth, 2L));
     }

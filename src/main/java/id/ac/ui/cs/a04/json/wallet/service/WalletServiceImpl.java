@@ -49,23 +49,20 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public WalletBalanceResponse getBalance(Long userId) {
-        return toBalanceResponse(getOrCreateWalletForUpdate(userId));
+        return toBalanceResponse(walletRepository.findById(userId).orElse(new Wallet(userId, ZERO)));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<WalletTransaction> getTransactions(Long userId) {
-        getOrCreateWallet(userId);
         return transactionRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
     }
 
     @Override
     @Transactional
     public Long createTopUpRequest(TopUpRequestDto request) {
-        getOrCreateWallet(request.userId());
-
         TopUpRequest result = topUpRequestRepository.save(TopUpRequest.builder()
                 .userId(request.userId())
                 .amount(request.amount())
@@ -121,8 +118,6 @@ public class WalletServiceImpl implements WalletService {
     @Override
     @Transactional
     public Long createWithdrawRequest(WithdrawRequestDto request) {
-        getOrCreateWallet(request.userId());
-
         WithdrawalRequest result = withdrawalRequestRepository.save(WithdrawalRequest.builder()
                 .userId(request.userId())
                 .amount(request.amount())
@@ -226,9 +221,22 @@ public class WalletServiceImpl implements WalletService {
         return toBalanceResponse(wallet);
     }
 
-    private Wallet getOrCreateWallet(Long userId) {
-        return walletRepository.findById(userId)
-                .orElseGet(() -> walletRepository.save(new Wallet(userId, ZERO)));
+    @Override
+    @Transactional(readOnly = true)
+    public List<WalletTransaction> getAllTransactions() {
+        return transactionRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TopUpRequest> getTopUpRequests() {
+        return topUpRequestRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WithdrawalRequest> getWithdrawalRequests() {
+        return withdrawalRequestRepository.findAll();
     }
 
     private Wallet getOrCreateWalletForUpdate(Long userId) {

@@ -27,16 +27,29 @@ public class WalletAccessGuard {
         }
     }
 
-    /**
-     * Check if the authenticated user is allowed to mark top-up/withdrawal requests
-     * issued by the user with the given id.
-     *
-     * @param authentication The authenticated user
-     * @param requestUserId The id of the user making the top-up/withdrawal request
-     */
+    public void requireAdminOrInternal(Authentication authentication) {
+        if (authentication == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication is required.");
+        }
+
+        boolean allowed = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority) || "ROLE_INTERNAL".equals(authority));
+        if (!allowed) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin or internal service access is required.");
+        }
+    }
+
     public void requireMarkPermission(Authentication authentication, Long requestUserId) {
         if (authentication == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication is required.");
+        }
+
+        boolean isInternal = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_INTERNAL"::equals);
+        if (isInternal) {
+            return;
         }
 
         boolean isAdmin = authentication.getAuthorities().stream()
