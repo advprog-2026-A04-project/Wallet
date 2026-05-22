@@ -117,7 +117,7 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody OrderAmountRequest request
     ) {
-        walletAccessGuard.requireUserAccess(authentication, request.userId(), true);
+        walletAccessGuard.requireAdminOrInternal(authentication);
         return ResponseEntity.ok(walletService.deduct(request.userId(), request.orderId(), request.amount()));
     }
 
@@ -126,7 +126,7 @@ public class WalletController {
             Authentication authentication,
             @Valid @RequestBody OrderAmountRequest request
     ) {
-        walletAccessGuard.requireUserAccess(authentication, request.userId(), true);
+        walletAccessGuard.requireAdminOrInternal(authentication);
         return ResponseEntity.ok(walletService.refund(request.userId(), request.orderId(), request.amount()));
     }
 
