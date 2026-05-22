@@ -151,7 +151,7 @@ class WalletControllerTest {
         WalletBalanceResponse response = new WalletBalanceResponse(1L, new BigDecimal("75"), "IDR");
         when(service.deduct(1L, 8L, new BigDecimal("25"))).thenReturn(response);
 
-        var entity = controller.deduct(new UsernamePasswordAuthenticationToken("1", null), request);
+        var entity = controller.deduct(new UsernamePasswordAuthenticationToken("1", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))), request);
 
         assertEquals(response, entity.getBody());
     }
@@ -165,7 +165,7 @@ class WalletControllerTest {
         WalletBalanceResponse response = new WalletBalanceResponse(1L, new BigDecimal("100"), "IDR");
         when(service.refund(1L, 8L, new BigDecimal("25"))).thenReturn(response);
 
-        var entity = controller.refund(new UsernamePasswordAuthenticationToken("1", null), request);
+        var entity = controller.refund(new UsernamePasswordAuthenticationToken("1", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))), request);
 
         assertEquals(response, entity.getBody());
     }
