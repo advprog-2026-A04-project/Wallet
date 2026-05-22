@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class WalletServiceImplTest {
@@ -53,28 +54,28 @@ class WalletServiceImplTest {
     }
 
     @Test
-    void getBalanceShouldCreateWalletWhenMissing() {
-        when(walletRepository.findByUserIdForUpdate(1L)).thenReturn(Optional.empty());
-        when(walletRepository.saveAndFlush(any(Wallet.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    void getBalanceShouldReturnZeroWhenWalletIsMissing() {
+        when(walletRepository.findById(1L)).thenReturn(Optional.empty());
 
         var response = walletService.getBalance(1L);
 
         assertEquals(new BigDecimal("0"), response.balance());
+        verify(walletRepository, never()).save(any(Wallet.class));
+        verify(walletRepository, never()).saveAndFlush(any(Wallet.class));
     }
 
     @Test
-    void getTransactionsShouldEnsureWalletExists() {
-        when(walletRepository.findById(1L)).thenReturn(Optional.of(new Wallet(1L, BigDecimal.ZERO)));
+    void getTransactionsShouldReturnLedgerWithoutCreatingWallet() {
         when(transactionRepository.findAllByUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of());
 
         walletService.getTransactions(1L);
 
         verify(transactionRepository).findAllByUserIdOrderByCreatedAtDesc(1L);
+        verifyNoInteractions(walletRepository);
     }
 
     @Test
     void createTopUpRequestShouldPersistPendingRequest() {
-        when(walletRepository.findById(1L)).thenReturn(Optional.of(new Wallet(1L, BigDecimal.ZERO)));
         when(topUpRequestRepository.save(any(TopUpRequest.class))).thenAnswer(invocation -> {
             TopUpRequest request = invocation.getArgument(0);
             request.setId(11L);
@@ -84,6 +85,7 @@ class WalletServiceImplTest {
         Long id = walletService.createTopUpRequest(new TopUpRequestDto(1L, new BigDecimal("100")));
 
         assertEquals(11L, id);
+        verifyNoInteractions(walletRepository);
     }
 
     @Test
@@ -122,7 +124,6 @@ class WalletServiceImplTest {
 
     @Test
     void createWithdrawRequestShouldPersistPendingRequest() {
-        when(walletRepository.findById(1L)).thenReturn(Optional.of(new Wallet(1L, BigDecimal.ZERO)));
         when(withdrawalRequestRepository.save(any(WithdrawalRequest.class))).thenAnswer(invocation -> {
             WithdrawalRequest request = invocation.getArgument(0);
             request.setId(12L);
@@ -132,6 +133,7 @@ class WalletServiceImplTest {
         Long id = walletService.createWithdrawRequest(new WithdrawRequestDto(1L, new BigDecimal("100"), "bank"));
 
         assertEquals(12L, id);
+        verifyNoInteractions(walletRepository);
     }
 
     @Test
@@ -270,5 +272,19 @@ class WalletServiceImplTest {
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> walletService.markWithdrawSuccess(99L));
 
         assertEquals(404, exception.getStatusCode().value());
+    }
+
+    @Test
+    void adminMonitoringShouldReturnRepositoryViews() {
+        WalletTransaction transaction = mock(WalletTransaction.class);
+        TopUpRequest topUpRequest = mock(TopUpRequest.class);
+        WithdrawalRequest withdrawalRequest = mock(WithdrawalRequest.class);
+        when(transactionRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(transaction));
+        when(topUpRequestRepository.findAll()).thenReturn(List.of(topUpRequest));
+        when(withdrawalRequestRepository.findAll()).thenReturn(List.of(withdrawalRequest));
+
+        assertEquals(List.of(transaction), walletService.getAllTransactions());
+        assertEquals(List.of(topUpRequest), walletService.getTopUpRequests());
+        assertEquals(List.of(withdrawalRequest), walletService.getWithdrawalRequests());
     }
 }
